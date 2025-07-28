@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'selectworkout.dart'; // Import SelectWorkoutScreen
-import 'addworkout.dart'; // Import AddWorkoutScreen
+import 'package:workout_tracker/pages/workoutDetail.dart';
+import 'package:workout_tracker/pages/selectworkout.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -10,12 +10,14 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  List<Map<String, String>> workouts = [];
+  List<Map<String, dynamic>> workouts = [];
 
-  // Function to add a new workout to the list
-  void _addWorkout(Map<String, String> workout) {
+  void _addWorkout(List<Map<String, dynamic>> selectedWorkouts) {
     setState(() {
-      workouts.add(workout); // Add workout to the list
+      workouts.add({
+        'workouts': selectedWorkouts,
+        'cardLabel': selectedWorkouts.map((workout) => workout['workout']).join(', '),
+      });
     });
   }
 
@@ -24,7 +26,7 @@ class _HomepageState extends State<Homepage> {
     final Purple = Color(0xFFCFBAE1);
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8F8FB),
+      backgroundColor: Color(0xFF04284E),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -41,6 +43,7 @@ class _HomepageState extends State<Homepage> {
                             fontSize: 25,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'RobotoCondensed',
+                            color: Color(0xFF77B5F8)
                           ),
                         ),
                       ],
@@ -48,173 +51,153 @@ class _HomepageState extends State<Homepage> {
                   ],
                 ),
               ),
-              SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Latest Workouts',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-              ),
               SizedBox(height: 10),
-              // Display List of Workouts
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
+                child: workouts.isEmpty
+                    ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    'No workouts added. Tap "Add Workout" to begin.',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                )
+                    : Column(
                   children: workouts.map((workout) {
                     return _WorkoutCard(
-                      icon: Icons.fitness_center,
-                      label: workout['name']!,
-                      time: workout['duration']!,
-                      cal: int.parse(workout['calories']!),
-                      schedule: 'Scheduled for: ${workout['date']} at ${workout['time']}',
-                      progressColor: Purple,
+                        icon: Icons.fitness_center,
+                        label: workout['cardLabel']!,
+                        time: 'Duration: ${workout['workouts'][0]['timer']} seconds',
+                        reps: '',
+                        sets: '',
+                        cal: workout['workouts'][0]['timer'] ?? 0,
+                        progressColor: Purple,
+                        iconColor: Color(0xFF3D96F5),
+                        backgroundColor: Color(0xFF1C3552),
+                        onTap: () async {
+                          final remainingWorkouts = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WorkoutDetailsPage(workouts: workout['workouts']),
+                            ),
+                          );
+
+                          if (remainingWorkouts != null) {
+                            setState(() {
+                              if (remainingWorkouts.isEmpty) {
+                                workouts.remove(workout);
+
+                                // 🎉 Show success message
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Workout completed! 🎉"),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              } else {
+                                workout['workouts'] = remainingWorkouts;
+                                workout['cardLabel'] = remainingWorkouts.map((w) => w['workout']).join(', ');
+                              }
+                            });
+                          }
+                        }
                     );
                   }).toList(),
                 ),
               ),
+              SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.add_circle_outline_rounded),
+                  label: Text("Add Workout"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF084F9B),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                    textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    final selectedWorkoutsData = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SelectWorkoutScreen()),
+                    );
+
+                    if (selectedWorkoutsData != null) {
+                      _addWorkout(selectedWorkoutsData);
+                    }
+                  },
+                ),
+              ),
+              SizedBox(height: 40),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNavBar(onWorkoutAdded: _addWorkout),
     );
   }
 }
 
 class _WorkoutCard extends StatelessWidget {
-  final String label, time, schedule;
+  final String label, time, reps, sets;
   final int cal;
   final Color progressColor;
+  final Color backgroundColor;
   final IconData icon;
+  final Color iconColor;
+  final Function onTap;
 
   const _WorkoutCard({
     required this.icon,
     required this.label,
     required this.time,
+    required this.reps,
+    required this.sets,
     required this.cal,
     required this.progressColor,
-    required this.schedule,
+    required this.backgroundColor,
+    required this.iconColor,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      margin: EdgeInsets.only(bottom: 16), // Add spacing between cards
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(blurRadius: 8, color: Colors.black12)],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: progressColor.withOpacity(0.2),
-            child: Icon(icon, color: progressColor, size: 32),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '$time  |  $cal Cal',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                ),
-                SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: cal / 300,
-                  backgroundColor: progressColor.withOpacity(0.2),
-                  color: progressColor,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  schedule,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () => onTap(),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        margin: EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(blurRadius: 8, color: Colors.black12)],
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: progressColor.withOpacity(0.2),
+              child: Icon(icon, color: iconColor, size: 32),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  SizedBox(height: 4),
+                  if (sets.isNotEmpty) SizedBox(height: 4),
+                  if (sets.isNotEmpty) Text(sets, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                  if (reps.isNotEmpty) SizedBox(height: 4),
+                  if (reps.isNotEmpty) Text(reps, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                  SizedBox(height: 8),
 
-// Bottom Navigation
-class _BottomNavBar extends StatelessWidget {
-  final Function(Map<String, String>) onWorkoutAdded;
-
-  _BottomNavBar({required this.onWorkoutAdded});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 70,
-      child: BottomNavigationBar(
-        selectedItemColor: Color(0xFFbcb9f1),
-        unselectedItemColor: Colors.grey[400],
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: [
-          BottomNavigationBarItem(icon: Padding(
-              padding: EdgeInsets.only(right: 5),
-              child: Icon(Icons.home_rounded, size: 28)
-          ), label: "Home"),
-
-          BottomNavigationBarItem(icon: Padding(
-              padding: EdgeInsets.only(right: 60),
-              child: Icon(Icons.calendar_today_rounded, size: 26)
-          ), label: "Calendar"),
-
-          BottomNavigationBarItem(icon: Padding(
-              padding: EdgeInsets.only(right: 60),
-              child: Icon(Icons.add_circle_outline_rounded, size: 36)
-          ), label: "Add"),
-
-          BottomNavigationBarItem(icon: Padding(
-              padding: EdgeInsets.only(right: 60),
-              child: Icon(Icons.bar_chart_rounded, size: 28)
-          ),  label: "Stats"),
-
-          BottomNavigationBarItem(icon: Padding(
-              padding: EdgeInsets.only(right: 60),
-              child: Icon(Icons.person_rounded, size: 26)
-          ),  label: "Profile"),
-        ],
-        onTap: (index) {
-          if (index == 2) {
-            // Navigate to SelectWorkoutScreen when "Add" is pressed
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SelectWorkoutScreen()),
-            ).then((selectedWorkouts) {
-              if (selectedWorkouts != null) {
-                // Navigate to AddWorkoutScreen to fill in the details
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddWorkoutScreen(workoutTypes: selectedWorkouts),
-                  ),
-                ).then((newWorkout) {
-                  if (newWorkout != null) {
-                    onWorkoutAdded(newWorkout); // Add the new workout to the list
-                  }
-                });
-              }
-            });
-          }
-        },
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
