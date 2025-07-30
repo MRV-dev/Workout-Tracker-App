@@ -35,7 +35,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   font_awesome_flutter: ^10.0.0
-  video_player: ^2.4.5
+  video_player: ^2.2.11
+  flutter_calendar_carousel: 2.5.4
 
 
 dev_dependencies:
@@ -48,6 +49,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  table_calendar: ^3.0.0
+  intl: ^0.20.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -60,14 +63,22 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  fonts:
-    - family: RobotoCondensed
-      fonts:
-        - asset: assets/fonts/Roboto_Condensed-Bold.ttf
+  assets:
+    - assets/push-ups.mp4
+    - assets/gym.png
+    - assets/leg.png
+    - assets/man.png
+    - assets/muscles.png
+    - assets/abdominal.png
+
+
+
+fonts:
+  - family: RobotoCondensed
+    fonts:
+      - asset: assets/fonts/Roboto_Condensed-Bold.ttf
 
   # To add assets to your application, add an assets section, like this:
-assets:
- -assets/push-ups.mp4
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

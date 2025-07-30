@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-import 'selectworkout.dart'; // Access staticWorkouts
+import 'dart:async'; // Import for Timer
 
 class WorkoutDetailsPage extends StatefulWidget {
   final List<Map<String, dynamic>> workouts;
@@ -13,298 +12,345 @@ class WorkoutDetailsPage extends StatefulWidget {
 
 class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
   late List<Map<String, dynamic>> _workouts;
-  Set<String> finishedStaticWorkouts = {}; // After timer
-  Set<String> completedDynamicWorkouts = {}; // Immediate done
 
   @override
   void initState() {
     super.initState();
-    _workouts = widget.workouts
-        .map((w) => {
-      ...w,
-      'timer': staticWorkouts.containsKey(w['workout']) ? 15 : 0,
-      'isStatic': staticWorkouts.containsKey(w['workout']),
-    })
-        .toList();
+    _workouts = widget.workouts; // Initialize local copy of workouts
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF031E3A),
+      backgroundColor: Color(0xFF074588),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF063B74),
-        title: const Text("Workout Details"),
+        title: Text('Workout Details'),
+        backgroundColor: Color(0xFF04284E),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: _workouts.isEmpty
-            ? const Center(
-          child: Text('All workouts done!',
-              style: TextStyle(color: Colors.white, fontSize: 18)),
-        )
-            : ListView.builder(
-          itemCount: _workouts.length,
-          itemBuilder: (context, index) {
-            final workout = _workouts[index];
-            final name = workout['workout'];
-            final isStatic = workout['isStatic'] == true;
-            final hasStarted = finishedStaticWorkouts.contains(name);
-            final isCompleted = completedDynamicWorkouts.contains(name);
+        child: Column(
+          children: [
+            // List of workouts
+            Expanded(
+              child: ListView.builder(
+                itemCount: _workouts.length, // Use the local list here
+                itemBuilder: (context, index) {
+                  final workout = _workouts[index];
 
-            String timeText = 'Duration: ${workout['timer']} seconds';
-            String repsText = workout['repetitions'] == 0 ? '' : 'Reps: ${workout['repetitions']}';
-            String setsText = workout['sets'] == 0 ? '' : 'Sets: ${workout['sets']}';
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF021427),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF0C77E9), width: 2),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: const Color(0xFF0C77E9).withOpacity(0.2),
-                        child: const Icon(Icons.fitness_center,
-                            color: Color(0xFF3D96F5), size: 32),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(name ?? '',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2A8BF4),
-                            )),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(timeText, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                  if (setsText.isNotEmpty) const SizedBox(height: 4),
-                  if (setsText.isNotEmpty)
-                    Text(setsText, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                  if (repsText.isNotEmpty) const SizedBox(height: 4),
-                  if (repsText.isNotEmpty)
-                    Text(repsText, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (isStatic) {
-                          hasStarted
-                              ? _removeWorkout(index)
-                              : _startTimerDialog(context, name);
-                        } else {
-                          isCompleted
-                              ? null
-                              : _startDynamicModal(name, workout['repetitions'], workout['sets']);
-
-                        }
-                      },
-                      child: Text((isStatic && hasStarted) || isCompleted ? "Done" : "Start"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: (isStatic && !hasStarted) || (!isStatic && !isCompleted)
-                            ? const Color(0xFF0C77E9)
-                            : Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  return Card(
+                    margin: EdgeInsets.only(bottom: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 4,
+                    color: Colors.blueAccent,
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundColor: Colors.blue,
+                                child: Icon(
+                                  Icons.fitness_center,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    workout['workout'],
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(height: 8),
+                                  if (workout['duration'] == null) ...[
+                                    Text('Sets: ${workout['sets']}', style: TextStyle(fontWeight: FontWeight.w500)),
+                                    Text('Reps: ${workout['reps']}', style: TextStyle(fontWeight: FontWeight.w500)),
+                                  ] else ...[
+                                    Text('Duration: ${workout['duration']} seconds', style: TextStyle(fontWeight: FontWeight.w500)),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              _showHeadstartTimerModal(context, () {
+                                if (workout['duration'] != null) {
+                                  _startStaticWorkoutTimerModal(context, workout, index);
+                                } else {
+                                  _showWorkoutStartModal(context, workout, index);
+                                }
+                              });
+                            },
+                            child: Text('Start'),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _removeWorkout(int index) {
-    final workoutName = _workouts[index]['workout'];
+  void _showHeadstartTimerModal(BuildContext context, VoidCallback onTimerFinish) {
+    int countdown = 5;
+    Timer? headstartTimer;
 
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            headstartTimer ??= Timer.periodic(Duration(seconds: 1), (timer) {
+              if (countdown > 1) {
+                setState(() {
+                  countdown--;
+                });
+              } else {
+                timer.cancel();
+                Navigator.of(dialogContext).pop();
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  onTimerFinish();
+                });
+              }
+            });
+
+            return AlertDialog(
+              backgroundColor: Color(0xFF021427),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              contentPadding: EdgeInsets.all(26),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Get Ready', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  Text(
+                    '$countdown',
+                    style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      headstartTimer?.cancel();
+    });
+  }
+
+  void _startStaticWorkoutTimerModal(BuildContext context, Map<String, dynamic> workout, int index) {
+    int totalTime = workout['duration'] ?? 30;
+    int remainingTime = totalTime;
+    Timer? staticTimer;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            staticTimer ??= Timer.periodic(Duration(seconds: 1), (timer) {
+              if (remainingTime > 1) {
+                setState(() {
+                  remainingTime--;
+                });
+              } else {
+                timer.cancel();
+                Navigator.of(dialogContext).pop();
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  bool isLastWorkout = _workouts.length == 0;
+                  markWorkoutDone(index);
+                  if (isLastWorkout) {
+                    Navigator.of(context).pop();
+                  } else {
+                    _startRestPeriod(context, navigateOnFinish: false);
+                  }
+
+                });
+              }
+            });
+
+            return AlertDialog(
+              backgroundColor: Color(0xFF021427),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              contentPadding: EdgeInsets.all(26),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Workout Timer', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  Text('$remainingTime', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 48, color: Colors.white)),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      staticTimer?.cancel();
+    });
+  }
+
+  void _startRestPeriod(BuildContext context, {bool navigateOnFinish = false}) {
+    int restDuration = 10;
+    int remainingTime = restDuration;
+    Timer? localTimer;
+    bool didPop = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            localTimer ??= Timer.periodic(Duration(seconds: 1), (timer) {
+              if (remainingTime > 1) {
+                setState(() {
+                  remainingTime--;
+                });
+              } else {
+                timer.cancel();
+                Navigator.of(dialogContext).pop(); // close rest dialog
+
+                if (navigateOnFinish && !didPop) {
+                  didPop = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.of(context).pop([]); // return to homepage with empty list
+                  });
+                }
+              }
+            });
+
+            double progress = (restDuration - remainingTime) / restDuration;
+
+            return AlertDialog(
+              backgroundColor: Color(0xFF021427),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              contentPadding: EdgeInsets.all(26),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Rest', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 17),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0, end: progress),
+                    duration: Duration(milliseconds: 500),
+                    builder: (context, animatedProgress, child) {
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 120,
+                            height: 120,
+                            child: CircularProgressIndicator(
+                              value: animatedProgress,
+                              strokeWidth: 8,
+                              backgroundColor: Colors.white24,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                            ),
+                          ),
+                          Text(
+                            '$remainingTime',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 42, color: Colors.white),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      localTimer?.cancel();
+    });
+  }
+
+
+  void _showWorkoutStartModal(BuildContext context, Map<String, dynamic> workout, int index) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Color(0xFF021427),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              contentPadding: EdgeInsets.all(20),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    workout['workout'],
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  if (workout['duration'] != null) ...[
+                    Text(
+                      'Duration: ${workout['duration']} seconds',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ] else ...[
+                    Text('Sets: ${workout['sets']}', style: TextStyle(color: Colors.white)),
+                    Text('Reps: ${workout['reps']}', style: TextStyle(color: Colors.white)),
+                  ],
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        markWorkoutDone(index);
+                        bool isLastWorkout = _workouts.length == 0;
+                        if (isLastWorkout) {
+                          Navigator.of(context).pop();
+                        } else {
+                          _startRestPeriod(context, navigateOnFinish: false);
+                        }
+
+                      });
+                    },
+                    child: Text('Done'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void markWorkoutDone(int index) {
     setState(() {
       _workouts.removeAt(index);
-      finishedStaticWorkouts.add(workoutName);
     });
-
-    if (_workouts.isEmpty) {
-      Future.microtask(() {
-        Navigator.pop(context, []); // Triggers homepage rebuild and card removal
-      });
-    }
   }
-
-
-  void _removeDynamicWorkout(String workoutName) {
-    setState(() {
-      completedDynamicWorkouts.add(workoutName);
-      _workouts.removeWhere((w) => w['workout'] == workoutName);
-    });
-
-    if (_workouts.isEmpty) {
-      Future.microtask(() {
-        Navigator.pop(context, []); // Triggers homepage rebuild and card removal
-      });
-    }
-
-  }
-
-
-  void _startTimerDialog(BuildContext context, String workoutName) async {
-    int secondsRemaining = 15;
-
-    final result = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        Timer? timer;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            timer ??= Timer.periodic(const Duration(seconds: 1), (t) {
-              if (secondsRemaining <= 1) {
-                t.cancel();
-                Navigator.of(context).pop('done'); // ✅ Return 'done'
-              } else {
-                setModalState(() => secondsRemaining--);
-              }
-            });
-
-            return AlertDialog(
-              backgroundColor: const Color(0xFF021427),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Workout Timer',
-                      style: TextStyle(color: Colors.white, fontSize: 20)),
-                  const SizedBox(height: 12),
-                  Text('$secondsRemaining',
-                      style: const TextStyle(fontSize: 48, color: Colors.green)),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      timer?.cancel();
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    child: const Text('Cancel'),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    // ✅ Update parent state AFTER dialog closes
-    if (result == 'done') {
-      setState(() {
-        finishedStaticWorkouts.add(workoutName);
-      });
-    }
-  }
-
-
-  void _showRestTimer() async {
-    int restSeconds = 10;
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        Timer? timer;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            timer ??= Timer.periodic(const Duration(seconds: 1), (t) {
-              if (restSeconds <= 1) {
-                t.cancel();
-                Navigator.of(context).pop();
-              } else {
-                setModalState(() => restSeconds--);
-              }
-            });
-
-            return AlertDialog(
-              backgroundColor: const Color(0xFF021427),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Rest Time',
-                      style: TextStyle(color: Colors.white, fontSize: 20)),
-                  const SizedBox(height: 12),
-                  Text('$restSeconds',
-                      style: const TextStyle(fontSize: 48, color: Colors.orangeAccent)),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      timer?.cancel();
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Skip'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _startDynamicModal(String workoutName, int reps, int sets) async {
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF021427),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          contentPadding: const EdgeInsets.all(20),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(workoutName,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
-              const SizedBox(height: 12),
-              Text('Sets: $sets',
-                  style:
-                  const TextStyle(fontSize: 18, color: Colors.orangeAccent)),
-              const SizedBox(height: 8),
-              Text('Repetitions: $reps',
-                  style:
-                  const TextStyle(fontSize: 18, color: Colors.orangeAccent)),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _removeDynamicWorkout(workoutName);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('Finish'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-
-
-
 }
