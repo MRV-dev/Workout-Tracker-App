@@ -29,7 +29,6 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
     return Scaffold(
       backgroundColor: Color(0xFF074588),
       appBar: AppBar(
-        title: Text('Workout Details'),
         backgroundColor: Color(0xFF04284E),
       ),
       body: Padding(
@@ -47,9 +46,13 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
                     margin: EdgeInsets.only(bottom: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(
+                        color: Color(0xFF3D96F5), // Border color
+                        width: 2, // Border width
+                      ),
                     ),
                     elevation: 4,
-                    color: Colors.blueAccent,
+                    color: Color(0xFF04284E),
                     child: Padding(
                       padding: EdgeInsets.all(16),
                       child: Row(
@@ -72,12 +75,12 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
                                 children: [
                                   Text(
                                     workout['workout'],
-                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,  color: Colors.white),
                                   ),
                                   SizedBox(height: 8),
                                   if (workout['duration'] == null) ...[
-                                    Text('Sets: ${workout['sets']}', style: TextStyle(fontWeight: FontWeight.w500)),
-                                    Text('Reps: ${workout['reps']}', style: TextStyle(fontWeight: FontWeight.w500)),
+                                    Text('Sets: ${workout['sets']}', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white)),
+                                    Text('Reps: ${workout['reps']}', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white)),
                                   ] else ...[
                                     Text('Duration: ${workout['duration']} seconds', style: TextStyle(fontWeight: FontWeight.w500)),
                                   ],
@@ -95,6 +98,15 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
                                 }
                               });
                             },
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Color(0xFF3D96F5), // Text color
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10), // Rounded corners, adjust as needed
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Adjust padding
+                              elevation: 5, // Add shadow effect (optional)
+                            ),
                             child: Text('Start'),
                           ),
                         ],
@@ -185,7 +197,7 @@ class _WorkoutDetailsPageState extends State<WorkoutDetailsPage> {
                   if (isLastWorkout) {
                     Navigator.of(context).pop();
                   } else {
-                    _startRestPeriod(context, navigateOnFinish: false);
+                    _startRestPeriod(context, navigateOnFinish: true);
                   }
 
                 });
